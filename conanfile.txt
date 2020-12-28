@@ -1,0 +1,5 @@
+[requires]
+flatbuffers/1.11.0@kapilsh/release
+
+[generators]
+cmake
