@@ -1,5 +1,11 @@
 [requires]
-flatbuffers/1.11.0@kapilsh/release
+flatbuffers/1.12.0
 
 [generators]
 cmake
+virtualenv
+
+[options]
+flatbuffers:shared=False
+flatbuffers:flatc=True
+flatbuffers:options_from_context=False
