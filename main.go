@@ -10,35 +10,32 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-/*
-{
-    "type": "subscribe",
-    "product_ids": [
-        "ETH-USD",
-        "ETH-EUR"
-    ],
-    "channels": [
-        "level2",
-        "heartbeat",
-        {
-            "name": "ticker",
-            "product_ids": [
-                "ETH-BTC",
-                "ETH-USD"
-            ]
-        }
-    ]
-}
-*/
-
+// SubscriptionMessage sent to the exchange
 type SubscriptionMessage struct {
 	Type       string   `json:"type"`
 	ProductIds []string `json:"product_ids"`
 	Channels   []string `json:"channels"`
 }
 
+// Snapshot received from the exchange
+type Snapshot struct {
+	Type      string     `json:"type"`
+	ProductID string     `json:"product_id"`
+	Bids      [][]string `json:"bids"`
+	Asks      [][]string `json:"asks"`
+}
+
+// L2Update received from the exchange
+type L2Update struct {
+	Type      string     `json:"type"`
+	ProductID string     `json:"product_id"`
+	Time      string     `json:"time"`
+	Changes   [][]string `json:"changes"`
+}
+
 func main() {
 	addr := "wss://ws-feed.pro.coinbase.com"
+	// filename := "/tmp/archive.data"
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -53,7 +50,7 @@ func main() {
 
 	done := make(chan struct{})
 
-	subs := SubscriptionMessage{Type: "subscribe", ProductIds: []string{"BTC-USD"}, Channels: []string{"level2", "heartbeat"}}
+	subs := SubscriptionMessage{Type: "subscribe", ProductIds: []string{"BTC-USD"}, Channels: []string{"full", "heartbeat"}}
 	subsJSON, err := json.Marshal(&subs)
 
 	if err != nil {
@@ -74,7 +71,19 @@ func main() {
 				log.Println("read:", err)
 				return
 			}
-			log.Printf("recv: %s", message)
+			var messageJSON map[string]interface{}
+			json.Unmarshal([]byte(message), &messageJSON)
+			log.Println(messageJSON)
+			// messageType := messageJSON["type"]
+			// if messageType == "snapshot" {
+			// 	var snapshot Snapshot
+			// 	json.Unmarshal([]byte(message), &snapshot)
+			// 	// log.Println(snapshot)
+			// } else if messageType == "l2update" {
+			// 	var incremental L2Update
+			// 	json.Unmarshal([]byte(message), &incremental)
+			// 	log.Println(incremental)
+			// }
 		}
 	}()
 
