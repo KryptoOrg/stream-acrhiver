@@ -2,36 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/krypto-org/krypto-archiver/messages"
 )
-
-// SubscriptionMessage sent to the exchange
-type SubscriptionMessage struct {
-	Type       string   `json:"type"`
-	ProductIds []string `json:"product_ids"`
-	Channels   []string `json:"channels"`
-}
-
-// Snapshot received from the exchange
-type Snapshot struct {
-	Type      string     `json:"type"`
-	ProductID string     `json:"product_id"`
-	Bids      [][]string `json:"bids"`
-	Asks      [][]string `json:"asks"`
-}
-
-// L2Update received from the exchange
-type L2Update struct {
-	Type      string     `json:"type"`
-	ProductID string     `json:"product_id"`
-	Time      string     `json:"time"`
-	Changes   [][]string `json:"changes"`
-}
 
 func main() {
 	addr := "wss://ws-feed.pro.coinbase.com"
@@ -50,7 +29,7 @@ func main() {
 
 	done := make(chan struct{})
 
-	subs := SubscriptionMessage{Type: "subscribe", ProductIds: []string{"BTC-USD"}, Channels: []string{"full", "heartbeat"}}
+	subs := messages.SubscriptionMessage{Type: "subscribe", ProductIds: []string{"BTC-USD"}, Channels: []string{"full", "heartbeat"}}
 	subsJSON, err := json.Marshal(&subs)
 
 	if err != nil {
@@ -73,17 +52,41 @@ func main() {
 			}
 			var messageJSON map[string]interface{}
 			json.Unmarshal([]byte(message), &messageJSON)
-			log.Println(messageJSON)
-			// messageType := messageJSON["type"]
-			// if messageType == "snapshot" {
-			// 	var snapshot Snapshot
-			// 	json.Unmarshal([]byte(message), &snapshot)
-			// 	// log.Println(snapshot)
-			// } else if messageType == "l2update" {
-			// 	var incremental L2Update
-			// 	json.Unmarshal([]byte(message), &incremental)
-			// 	log.Println(incremental)
-			// }
+			messageType := messageJSON["type"]
+			switch messageType {
+			case "received":
+				var receivedJSON messages.Received
+				json.Unmarshal([]byte(message), &receivedJSON)
+				fmt.Println(receivedJSON)
+			case "open":
+				var openJSON messages.Open
+				json.Unmarshal([]byte(message), &openJSON)
+				fmt.Println(openJSON)
+			case "done":
+				var doneJSON messages.Done
+				json.Unmarshal([]byte(message), &doneJSON)
+				fmt.Println(doneJSON)
+			case "match":
+				var matchJSON messages.Match
+				json.Unmarshal([]byte(message), &matchJSON)
+				fmt.Println(matchJSON)
+			case "change":
+				var changeJSON messages.Change
+				json.Unmarshal([]byte(message), &changeJSON)
+				fmt.Println(changeJSON)
+			case "activate":
+				var activateJSON messages.Activate
+				json.Unmarshal([]byte(message), &activateJSON)
+				fmt.Println(activateJSON)
+			case "heartbeat":
+				var heartbeatJSON messages.Heartbeat
+				json.Unmarshal([]byte(message), &heartbeatJSON)
+				fmt.Println(heartbeatJSON)
+			case "subscriptions":
+				log.Printf("Subscribed! %s", messageJSON)
+			default:
+				log.Fatalf("Received unknown messageType : %s\n", messageType)
+			}
 		}
 	}()
 
