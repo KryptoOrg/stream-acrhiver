@@ -21,9 +21,13 @@ conan install ${SCRIPT_DIR} -g virtualenv -g cmake -s compiler=gcc  -s compiler.
 source activate.sh && echo -e "${BLUE}Using $(flatc --version)${NC}" || exit
 cd ..
 
-echo -e "${BLUE}"--- COMPILE C++ FLATBUFFERS SOURCES ---"${NC}"
+echo -e "${BLUE}"--- COMPILE GO FLATBUFFERS SOURCES ---"${NC}"
 flatc --go -o "${SCRIPT_DIR}" "${SCRIPT_DIR}/serialization.fbs" || exit
 
 rm -r build
 
-go build
+echo -e "${BLUE}"--- BUILDING EXECUTABLE ---"${NC}"
+
+go build .
+
+echo -e "${BLUE}"--- DONE! ---"${NC}"

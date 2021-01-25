@@ -1,5 +1,12 @@
 package messages
 
+import (
+	"strconv"
+
+	flatbuffers "github.com/google/flatbuffers/go"
+	serialization "github.com/krypto-org/krypto-archiver/serialization"
+)
+
 // Received Exchange received message:
 type Received struct {
 	Type      string `json:"type"`
@@ -80,4 +87,97 @@ type Activate struct {
 	Size      string `json:"size"`
 	Funds     string `json:"funds"`
 	Private   bool   `json:"private"`
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func parseSide(side string) serialization.Side {
+	if side == "buy" {
+		return serialization.SideBUY
+	} else if side == "sell" {
+		return serialization.SideSELL
+	}
+	return serialization.SideUNKNOWN
+}
+
+func parseOrderType(orderType string) serialization.OrderType {
+	if orderType == "limit" {
+		return serialization.OrderTypeLIMIT
+	} else if orderType == "market" {
+		return serialization.OrderTypeMARKET
+	}
+	return serialization.OrderTypeUNKNOWN
+}
+
+// ConvertReceived received to flatbuffer type
+func ConvertReceived(message *Received) []byte {
+
+	builder := flatbuffers.NewBuilder(1024)
+	productID := builder.CreateString(message.ProductID)
+	orderID := builder.CreateString(message.OrderID)
+
+	size, e := strconv.ParseFloat(message.Size, 64)
+	check(e)
+
+	price, e := strconv.ParseFloat(message.Price, 64)
+	check(e)
+
+	var funds float64 = 0
+
+	if message.Funds != "" {
+		fundsParsed, e := strconv.ParseFloat(message.Funds, 64)
+		check(e)
+		funds = fundsParsed
+	}
+
+	side := parseSide(message.Side)
+	orderType := parseOrderType(message.OrderType)
+
+	serialization.OrderUpdateStart(builder)
+	serialization.OrderUpdateAddOrderUpdateType(builder, serialization.OrderUpdateTypeRECEIVED)
+	serialization.OrderUpdateAddSequence(builder, message.Sequence)
+	serialization.OrderUpdateAddSize(builder, size)
+	serialization.OrderUpdateAddPrice(builder, price)
+	serialization.OrderUpdateAddSide(builder, side)
+	serialization.OrderUpdateAddOrderType(builder, orderType)
+	serialization.OrderUpdateAddProductId(builder, productID)
+	serialization.OrderUpdateAddOrderId(builder, orderID)
+	serialization.OrderUpdateAddFunds(builder, funds)
+	orderUpdate := serialization.OrderUpdateEnd(builder)
+
+	builder.Finish(orderUpdate)
+	return builder.FinishedBytes()
+}
+
+// ConvertOpen open to flatbuffer type
+func ConvertOpen(message *Open) []byte {
+
+	builder := flatbuffers.NewBuilder(1024)
+	productID := builder.CreateString(message.ProductID)
+	orderID := builder.CreateString(message.OrderID)
+
+	remainingSize, e := strconv.ParseFloat(message.RemainingSize, 64)
+	check(e)
+
+	price, e := strconv.ParseFloat(message.Price, 64)
+	check(e)
+
+	side := parseSide(message.Side)
+
+	serialization.OrderUpdateStart(builder)
+	serialization.OrderUpdateAddOrderUpdateType(builder, serialization.OrderUpdateTypeOPEN)
+	serialization.OrderUpdateAddSequence(builder, message.Sequence)
+	serialization.OrderUpdateAddPrice(builder, price)
+	serialization.OrderUpdateAddSide(builder, side)
+	serialization.OrderUpdateAddRemainingSize(builder, remainingSize)
+	serialization.OrderUpdateAddProductId(builder, productID)
+	serialization.OrderUpdateAddOrderId(builder, orderID)
+	orderUpdate := serialization.OrderUpdateEnd(builder)
+
+	builder.Finish(orderUpdate)
+	return builder.FinishedBytes()
 }

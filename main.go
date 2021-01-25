@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -57,31 +56,28 @@ func main() {
 			case "received":
 				var receivedJSON messages.Received
 				json.Unmarshal([]byte(message), &receivedJSON)
-				fmt.Println(receivedJSON)
+				serialized := messages.ConvertReceived(&receivedJSON)
+				log.Printf("Received: %s\n", serialized)
 			case "open":
 				var openJSON messages.Open
 				json.Unmarshal([]byte(message), &openJSON)
-				fmt.Println(openJSON)
+				serialized := messages.ConvertOpen(&openJSON)
+				log.Printf("Open: %s\n", serialized)
 			case "done":
 				var doneJSON messages.Done
 				json.Unmarshal([]byte(message), &doneJSON)
-				fmt.Println(doneJSON)
 			case "match":
 				var matchJSON messages.Match
 				json.Unmarshal([]byte(message), &matchJSON)
-				fmt.Println(matchJSON)
 			case "change":
 				var changeJSON messages.Change
 				json.Unmarshal([]byte(message), &changeJSON)
-				fmt.Println(changeJSON)
 			case "activate":
 				var activateJSON messages.Activate
 				json.Unmarshal([]byte(message), &activateJSON)
-				fmt.Println(activateJSON)
 			case "heartbeat":
 				var heartbeatJSON messages.Heartbeat
 				json.Unmarshal([]byte(message), &heartbeatJSON)
-				fmt.Println(heartbeatJSON)
 			case "subscriptions":
 				log.Printf("Subscribed! %s", messageJSON)
 			default:

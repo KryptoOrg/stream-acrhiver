@@ -38,7 +38,7 @@ func (rcv *OrderUpdate) MutateTimestamp(n int64) bool {
 	return rcv._tab.MutateInt64Slot(4, n)
 }
 
-func (rcv *OrderUpdate) OrderId() []byte {
+func (rcv *OrderUpdate) ProductId() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
@@ -46,14 +46,223 @@ func (rcv *OrderUpdate) OrderId() []byte {
 	return nil
 }
 
+func (rcv *OrderUpdate) OrderUpdateType() OrderUpdateType {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
+	if o != 0 {
+		return OrderUpdateType(rcv._tab.GetInt8(o + rcv._tab.Pos))
+	}
+	return 0
+}
+
+func (rcv *OrderUpdate) MutateOrderUpdateType(n OrderUpdateType) bool {
+	return rcv._tab.MutateInt8Slot(8, int8(n))
+}
+
+func (rcv *OrderUpdate) Sequence() int64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
+	if o != 0 {
+		return rcv._tab.GetInt64(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *OrderUpdate) MutateSequence(n int64) bool {
+	return rcv._tab.MutateInt64Slot(10, n)
+}
+
+func (rcv *OrderUpdate) OrderId() []byte {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(12))
+	if o != 0 {
+		return rcv._tab.ByteVector(o + rcv._tab.Pos)
+	}
+	return nil
+}
+
+func (rcv *OrderUpdate) OrderType() OrderType {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(14))
+	if o != 0 {
+		return OrderType(rcv._tab.GetInt8(o + rcv._tab.Pos))
+	}
+	return 0
+}
+
+func (rcv *OrderUpdate) MutateOrderType(n OrderType) bool {
+	return rcv._tab.MutateInt8Slot(14, int8(n))
+}
+
+func (rcv *OrderUpdate) Size() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(16))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *OrderUpdate) MutateSize(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(16, n)
+}
+
+func (rcv *OrderUpdate) Price() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(18))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *OrderUpdate) MutatePrice(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(18, n)
+}
+
+func (rcv *OrderUpdate) Side() Side {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(20))
+	if o != 0 {
+		return Side(rcv._tab.GetInt8(o + rcv._tab.Pos))
+	}
+	return 0
+}
+
+func (rcv *OrderUpdate) MutateSide(n Side) bool {
+	return rcv._tab.MutateInt8Slot(20, int8(n))
+}
+
+func (rcv *OrderUpdate) Funds() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(22))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *OrderUpdate) MutateFunds(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(22, n)
+}
+
+func (rcv *OrderUpdate) RemainingSize() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(24))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *OrderUpdate) MutateRemainingSize(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(24, n)
+}
+
+func (rcv *OrderUpdate) Reason() []byte {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(26))
+	if o != 0 {
+		return rcv._tab.ByteVector(o + rcv._tab.Pos)
+	}
+	return nil
+}
+
+func (rcv *OrderUpdate) MakerOrderId() []byte {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(28))
+	if o != 0 {
+		return rcv._tab.ByteVector(o + rcv._tab.Pos)
+	}
+	return nil
+}
+
+func (rcv *OrderUpdate) TakerOrderId() []byte {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(30))
+	if o != 0 {
+		return rcv._tab.ByteVector(o + rcv._tab.Pos)
+	}
+	return nil
+}
+
+func (rcv *OrderUpdate) TradeId() int64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(32))
+	if o != 0 {
+		return rcv._tab.GetInt64(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *OrderUpdate) MutateTradeId(n int64) bool {
+	return rcv._tab.MutateInt64Slot(32, n)
+}
+
+func (rcv *OrderUpdate) NewSize() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(34))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *OrderUpdate) MutateNewSize(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(34, n)
+}
+
+func (rcv *OrderUpdate) OldSize() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(36))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *OrderUpdate) MutateOldSize(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(36, n)
+}
+
 func OrderUpdateStart(builder *flatbuffers.Builder) {
-	builder.StartObject(2)
+	builder.StartObject(17)
 }
 func OrderUpdateAddTimestamp(builder *flatbuffers.Builder, timestamp int64) {
 	builder.PrependInt64Slot(0, timestamp, 0)
 }
+func OrderUpdateAddProductId(builder *flatbuffers.Builder, productId flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(productId), 0)
+}
+func OrderUpdateAddOrderUpdateType(builder *flatbuffers.Builder, orderUpdateType OrderUpdateType) {
+	builder.PrependInt8Slot(2, int8(orderUpdateType), 0)
+}
+func OrderUpdateAddSequence(builder *flatbuffers.Builder, sequence int64) {
+	builder.PrependInt64Slot(3, sequence, 0)
+}
 func OrderUpdateAddOrderId(builder *flatbuffers.Builder, orderId flatbuffers.UOffsetT) {
-	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(orderId), 0)
+	builder.PrependUOffsetTSlot(4, flatbuffers.UOffsetT(orderId), 0)
+}
+func OrderUpdateAddOrderType(builder *flatbuffers.Builder, orderType OrderType) {
+	builder.PrependInt8Slot(5, int8(orderType), 0)
+}
+func OrderUpdateAddSize(builder *flatbuffers.Builder, size float64) {
+	builder.PrependFloat64Slot(6, size, 0.0)
+}
+func OrderUpdateAddPrice(builder *flatbuffers.Builder, price float64) {
+	builder.PrependFloat64Slot(7, price, 0.0)
+}
+func OrderUpdateAddSide(builder *flatbuffers.Builder, side Side) {
+	builder.PrependInt8Slot(8, int8(side), 0)
+}
+func OrderUpdateAddFunds(builder *flatbuffers.Builder, funds float64) {
+	builder.PrependFloat64Slot(9, funds, 0.0)
+}
+func OrderUpdateAddRemainingSize(builder *flatbuffers.Builder, remainingSize float64) {
+	builder.PrependFloat64Slot(10, remainingSize, 0.0)
+}
+func OrderUpdateAddReason(builder *flatbuffers.Builder, reason flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(11, flatbuffers.UOffsetT(reason), 0)
+}
+func OrderUpdateAddMakerOrderId(builder *flatbuffers.Builder, makerOrderId flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(12, flatbuffers.UOffsetT(makerOrderId), 0)
+}
+func OrderUpdateAddTakerOrderId(builder *flatbuffers.Builder, takerOrderId flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(13, flatbuffers.UOffsetT(takerOrderId), 0)
+}
+func OrderUpdateAddTradeId(builder *flatbuffers.Builder, tradeId int64) {
+	builder.PrependInt64Slot(14, tradeId, 0)
+}
+func OrderUpdateAddNewSize(builder *flatbuffers.Builder, newSize float64) {
+	builder.PrependFloat64Slot(15, newSize, 0.0)
+}
+func OrderUpdateAddOldSize(builder *flatbuffers.Builder, oldSize float64) {
+	builder.PrependFloat64Slot(16, oldSize, 0.0)
 }
 func OrderUpdateEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
