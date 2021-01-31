@@ -113,6 +113,18 @@ func parseOrderType(orderType string) serialization.OrderType {
 	return serialization.OrderTypeUNKNOWN
 }
 
+func parseCheckedFloat(value string) float64 {
+	var parsed float64 = 0
+
+	if value != "" {
+		fundsParsed, e := strconv.ParseFloat(value, 64)
+		check(e)
+		parsed = fundsParsed
+	}
+
+	return parsed
+}
+
 // ConvertReceived received to flatbuffer type
 func ConvertReceived(message *Received) []byte {
 
@@ -120,24 +132,20 @@ func ConvertReceived(message *Received) []byte {
 	productID := builder.CreateString(message.ProductID)
 	orderID := builder.CreateString(message.OrderID)
 
-	size, e := strconv.ParseFloat(message.Size, 64)
-	check(e)
+	size := parseCheckedFloat(message.Size)
 
-	price, e := strconv.ParseFloat(message.Price, 64)
-	check(e)
-
-	var funds float64 = 0
-
-	if message.Funds != "" {
-		fundsParsed, e := strconv.ParseFloat(message.Funds, 64)
-		check(e)
-		funds = fundsParsed
-	}
+	price := parseCheckedFloat(message.Price)
 
 	side := parseSide(message.Side)
 	orderType := parseOrderType(message.OrderType)
 
+	timestamp, e := ParseTimestamp(message.Time)
+	check(e)
+
+	funds := parseCheckedFloat(message.Funds)
+
 	serialization.OrderUpdateStart(builder)
+	serialization.OrderUpdateAddTimestamp(builder, timestamp)
 	serialization.OrderUpdateAddOrderUpdateType(builder, serialization.OrderUpdateTypeRECEIVED)
 	serialization.OrderUpdateAddSequence(builder, message.Sequence)
 	serialization.OrderUpdateAddSize(builder, size)
@@ -168,7 +176,11 @@ func ConvertOpen(message *Open) []byte {
 
 	side := parseSide(message.Side)
 
+	timestamp, e := ParseTimestamp(message.Time)
+	check(e)
+
 	serialization.OrderUpdateStart(builder)
+	serialization.OrderUpdateAddTimestamp(builder, timestamp)
 	serialization.OrderUpdateAddOrderUpdateType(builder, serialization.OrderUpdateTypeOPEN)
 	serialization.OrderUpdateAddSequence(builder, message.Sequence)
 	serialization.OrderUpdateAddPrice(builder, price)
@@ -176,6 +188,77 @@ func ConvertOpen(message *Open) []byte {
 	serialization.OrderUpdateAddRemainingSize(builder, remainingSize)
 	serialization.OrderUpdateAddProductId(builder, productID)
 	serialization.OrderUpdateAddOrderId(builder, orderID)
+	orderUpdate := serialization.OrderUpdateEnd(builder)
+
+	builder.Finish(orderUpdate)
+	return builder.FinishedBytes()
+}
+
+// ConvertDone done to flatbuffer type
+func ConvertDone(message *Done) []byte {
+
+	builder := flatbuffers.NewBuilder(1024)
+	productID := builder.CreateString(message.ProductID)
+	orderID := builder.CreateString(message.OrderID)
+	reason := builder.CreateString(message.Reason)
+
+	remainingSize, e := strconv.ParseFloat(message.RemainingSize, 64)
+	check(e)
+
+	price, e := strconv.ParseFloat(message.Price, 64)
+	check(e)
+
+	side := parseSide(message.Side)
+
+	timestamp, e := ParseTimestamp(message.Time)
+	check(e)
+
+	serialization.OrderUpdateStart(builder)
+	serialization.OrderUpdateAddTimestamp(builder, timestamp)
+	serialization.OrderUpdateAddOrderUpdateType(builder, serialization.OrderUpdateTypeDONE)
+	serialization.OrderUpdateAddSequence(builder, message.Sequence)
+	serialization.OrderUpdateAddPrice(builder, price)
+	serialization.OrderUpdateAddSide(builder, side)
+	serialization.OrderUpdateAddRemainingSize(builder, remainingSize)
+	serialization.OrderUpdateAddProductId(builder, productID)
+	serialization.OrderUpdateAddOrderId(builder, orderID)
+	serialization.OrderUpdateAddReason(builder, reason)
+	orderUpdate := serialization.OrderUpdateEnd(builder)
+
+	builder.Finish(orderUpdate)
+	return builder.FinishedBytes()
+}
+
+// ConvertMatch match to flatbuffer type
+func ConvertMatch(message *Match) []byte {
+
+	builder := flatbuffers.NewBuilder(1024)
+	productID := builder.CreateString(message.ProductID)
+	makerOrderID := builder.CreateString(message.MakerOrderID)
+	takerOrderID := builder.CreateString(message.TakerOrderID)
+
+	size, e := strconv.ParseFloat(message.Size, 64)
+	check(e)
+
+	price, e := strconv.ParseFloat(message.Price, 64)
+	check(e)
+
+	side := parseSide(message.Side)
+
+	timestamp, e := ParseTimestamp(message.Time)
+	check(e)
+
+	serialization.OrderUpdateStart(builder)
+	serialization.OrderUpdateAddTimestamp(builder, timestamp)
+	serialization.OrderUpdateAddOrderUpdateType(builder, serialization.OrderUpdateTypeMATCH)
+	serialization.OrderUpdateAddTradeId(builder, message.TradeID)
+	serialization.OrderUpdateAddSequence(builder, message.Sequence)
+	serialization.OrderUpdateAddPrice(builder, price)
+	serialization.OrderUpdateAddSide(builder, side)
+	serialization.OrderUpdateAddSize(builder, size)
+	serialization.OrderUpdateAddProductId(builder, productID)
+	serialization.OrderUpdateAddMakerOrderId(builder, makerOrderID)
+	serialization.OrderUpdateAddTakerOrderId(builder, takerOrderID)
 	orderUpdate := serialization.OrderUpdateEnd(builder)
 
 	builder.Finish(orderUpdate)

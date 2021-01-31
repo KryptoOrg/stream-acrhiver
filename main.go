@@ -66,6 +66,8 @@ func main() {
 			case "done":
 				var doneJSON messages.Done
 				json.Unmarshal([]byte(message), &doneJSON)
+				serialized := messages.ConvertDone(&doneJSON)
+				log.Printf("Done: %s\n", serialized)
 			case "match":
 				var matchJSON messages.Match
 				json.Unmarshal([]byte(message), &matchJSON)
