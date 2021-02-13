@@ -11,9 +11,13 @@ import (
 	"github.com/krypto-org/krypto-archiver/messages"
 )
 
+func write(bb []byte, f *os.File) {
+	_, err := f.Write(bb)
+	messages.Check(err)
+}
+
 func main() {
 	addr := "wss://ws-feed.pro.coinbase.com"
-	// filename := "/tmp/archive.data"
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -21,28 +25,25 @@ func main() {
 	log.Printf("connecting to %s", addr)
 
 	connection, _, err := websocket.DefaultDialer.Dial(addr, nil)
-	if err != nil {
-		log.Fatal("dial:", err)
-	}
+	messages.Check(err)
 	defer connection.Close()
 
 	done := make(chan struct{})
 
 	subs := messages.SubscriptionMessage{Type: "subscribe", ProductIds: []string{"BTC-USD"}, Channels: []string{"full", "heartbeat"}}
 	subsJSON, err := json.Marshal(&subs)
-
-	if err != nil {
-		log.Fatal("Json marshalling failed")
-	}
+	messages.Check(err)
 
 	err = connection.WriteMessage(websocket.TextMessage, []byte(string(subsJSON)))
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	messages.Check(err)
 
 	go func() {
 		defer close(done)
+		file, err := os.Create("/tmp/coinbase_dump.data")
+		messages.Check(err)
+
+		defer file.Close()
+
 		for {
 			_, message, err := connection.ReadMessage()
 			if err != nil {
@@ -56,21 +57,23 @@ func main() {
 			case "received":
 				var receivedJSON messages.Received
 				json.Unmarshal([]byte(message), &receivedJSON)
-				serialized := messages.ConvertReceived(&receivedJSON)
-				log.Printf("Received: %s\n", serialized)
+				log.Printf("Received: %v\n", receivedJSON)
+				write(messages.ConvertReceived(&receivedJSON), file)
 			case "open":
 				var openJSON messages.Open
 				json.Unmarshal([]byte(message), &openJSON)
-				serialized := messages.ConvertOpen(&openJSON)
-				log.Printf("Open: %s\n", serialized)
+				log.Printf("Open: %v\n", openJSON)
+				write(messages.ConvertOpen(&openJSON), file)
 			case "done":
 				var doneJSON messages.Done
 				json.Unmarshal([]byte(message), &doneJSON)
-				serialized := messages.ConvertDone(&doneJSON)
-				log.Printf("Done: %s\n", serialized)
+				log.Printf("Done: %v\n", doneJSON)
+				write(messages.ConvertDone(&doneJSON), file)
 			case "match":
 				var matchJSON messages.Match
 				json.Unmarshal([]byte(message), &matchJSON)
+				log.Printf("Match: %v\n", matchJSON)
+				write(messages.ConvertMatch(&matchJSON), file)
 			case "change":
 				var changeJSON messages.Change
 				json.Unmarshal([]byte(message), &changeJSON)

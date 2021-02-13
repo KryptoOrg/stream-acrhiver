@@ -89,12 +89,6 @@ type Activate struct {
 	Private   bool   `json:"private"`
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 func parseSide(side string) serialization.Side {
 	if side == "buy" {
 		return serialization.SideBUY
@@ -118,7 +112,7 @@ func parseCheckedFloat(value string) float64 {
 
 	if value != "" {
 		fundsParsed, e := strconv.ParseFloat(value, 64)
-		check(e)
+		Check(e)
 		parsed = fundsParsed
 	}
 
@@ -140,7 +134,7 @@ func ConvertReceived(message *Received) []byte {
 	orderType := parseOrderType(message.OrderType)
 
 	timestamp, e := ParseTimestamp(message.Time)
-	check(e)
+	Check(e)
 
 	funds := parseCheckedFloat(message.Funds)
 
@@ -169,15 +163,15 @@ func ConvertOpen(message *Open) []byte {
 	orderID := builder.CreateString(message.OrderID)
 
 	remainingSize, e := strconv.ParseFloat(message.RemainingSize, 64)
-	check(e)
+	Check(e)
 
 	price, e := strconv.ParseFloat(message.Price, 64)
-	check(e)
+	Check(e)
 
 	side := parseSide(message.Side)
 
 	timestamp, e := ParseTimestamp(message.Time)
-	check(e)
+	Check(e)
 
 	serialization.OrderUpdateStart(builder)
 	serialization.OrderUpdateAddTimestamp(builder, timestamp)
@@ -202,16 +196,12 @@ func ConvertDone(message *Done) []byte {
 	orderID := builder.CreateString(message.OrderID)
 	reason := builder.CreateString(message.Reason)
 
-	remainingSize, e := strconv.ParseFloat(message.RemainingSize, 64)
-	check(e)
-
-	price, e := strconv.ParseFloat(message.Price, 64)
-	check(e)
-
+	remainingSize := parseCheckedFloat(message.RemainingSize)
+	price := parseCheckedFloat(message.Price)
 	side := parseSide(message.Side)
 
 	timestamp, e := ParseTimestamp(message.Time)
-	check(e)
+	Check(e)
 
 	serialization.OrderUpdateStart(builder)
 	serialization.OrderUpdateAddTimestamp(builder, timestamp)
@@ -238,15 +228,15 @@ func ConvertMatch(message *Match) []byte {
 	takerOrderID := builder.CreateString(message.TakerOrderID)
 
 	size, e := strconv.ParseFloat(message.Size, 64)
-	check(e)
+	Check(e)
 
 	price, e := strconv.ParseFloat(message.Price, 64)
-	check(e)
+	Check(e)
 
 	side := parseSide(message.Side)
 
 	timestamp, e := ParseTimestamp(message.Time)
-	check(e)
+	Check(e)
 
 	serialization.OrderUpdateStart(builder)
 	serialization.OrderUpdateAddTimestamp(builder, timestamp)

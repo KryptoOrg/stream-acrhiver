@@ -1,6 +1,7 @@
 package messages
 
 import (
+	"log"
 	"time"
 )
 
@@ -17,4 +18,11 @@ type Heartbeat struct {
 func ParseTimestamp(ts string) (int64, error) {
 	t, e := time.Parse(time.RFC3339, ts)
 	return t.UnixNano(), e
+}
+
+// Check checks the error
+func Check(e error) {
+	if e != nil {
+		log.Fatal(e)
+	}
 }
