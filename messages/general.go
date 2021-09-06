@@ -1,7 +1,7 @@
 package messages
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"time"
@@ -17,16 +17,29 @@ func write(bb []byte, f *os.File) {
 }
 
 func main() {
+	// TODO: Split the data in multiple files
+	// TODO: Configuration for file and input details
+
+	customFormatter := new(log.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02 15:04:05.999"
+	customFormatter.FullTimestamp = true
+	log.SetFormatter(customFormatter)
+
 	addr := "wss://ws-feed.pro.coinbase.com"
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	log.Printf("connecting to %s", addr)
+	log.Infof("connecting to %s", addr)
 
 	connection, _, err := websocket.DefaultDialer.Dial(addr, nil)
 	messages.Check(err)
-	defer connection.Close()
+	defer func(connection *websocket.Conn) {
+		err := connection.Close()
+		if err != nil {
+			log.Errorf("Error while closing file %s\n", err)
+		}
+	}(connection)
 
 	done := make(chan struct{})
 
@@ -34,7 +47,7 @@ func main() {
 	subsJSON, err := json.Marshal(&subs)
 	messages.Check(err)
 
-	err = connection.WriteMessage(websocket.TextMessage, []byte(string(subsJSON)))
+	err = connection.WriteMessage(websocket.TextMessage, subsJSON)
 	messages.Check(err)
 
 	go func() {
@@ -42,49 +55,54 @@ func main() {
 		file, err := os.Create("/tmp/coinbase_dump.data")
 		messages.Check(err)
 
-		defer file.Close()
+		defer func(file *os.File) {
+			err := file.Close()
+			if err != nil {
+				log.Errorf("Error while closing file %s\n", err)
+			}
+		}(file)
 
 		for {
 			_, message, err := connection.ReadMessage()
 			if err != nil {
-				log.Println("read:", err)
+				log.Warning("read: ", err)
 				return
 			}
 			var messageJSON map[string]interface{}
-			json.Unmarshal([]byte(message), &messageJSON)
+			messages.Check(json.Unmarshal(message, &messageJSON))
 			messageType := messageJSON["type"]
 			switch messageType {
 			case "received":
 				var receivedJSON messages.Received
-				json.Unmarshal([]byte(message), &receivedJSON)
-				log.Printf("Received: %v\n", receivedJSON)
+				messages.Check(json.Unmarshal(message, &receivedJSON))
+				log.Infof("Received: %v\n", receivedJSON)
 				write(messages.ConvertReceived(&receivedJSON), file)
 			case "open":
 				var openJSON messages.Open
-				json.Unmarshal([]byte(message), &openJSON)
-				log.Printf("Open: %v\n", openJSON)
+				messages.Check(json.Unmarshal(message, &openJSON))
+				log.Infof("Open: %v\n", openJSON)
 				write(messages.ConvertOpen(&openJSON), file)
 			case "done":
 				var doneJSON messages.Done
-				json.Unmarshal([]byte(message), &doneJSON)
-				log.Printf("Done: %v\n", doneJSON)
+				messages.Check(json.Unmarshal(message, &doneJSON))
+				log.Infof("Done: %v\n", doneJSON)
 				write(messages.ConvertDone(&doneJSON), file)
 			case "match":
 				var matchJSON messages.Match
-				json.Unmarshal([]byte(message), &matchJSON)
-				log.Printf("Match: %v\n", matchJSON)
+				messages.Check(json.Unmarshal(message, &matchJSON))
+				log.Infof("Match: %v\n", matchJSON)
 				write(messages.ConvertMatch(&matchJSON), file)
 			case "change":
 				var changeJSON messages.Change
-				json.Unmarshal([]byte(message), &changeJSON)
+				messages.Check(json.Unmarshal(message, &changeJSON))
 			case "activate":
 				var activateJSON messages.Activate
-				json.Unmarshal([]byte(message), &activateJSON)
+				messages.Check(json.Unmarshal(message, &activateJSON))
 			case "heartbeat":
 				var heartbeatJSON messages.Heartbeat
-				json.Unmarshal([]byte(message), &heartbeatJSON)
+				messages.Check(json.Unmarshal(message, &heartbeatJSON))
 			case "subscriptions":
-				log.Printf("Subscribed! %s", messageJSON)
+				log.Infof("Subscribed! %s", messageJSON)
 			default:
 				log.Fatalf("Received unknown messageType : %s\n", messageType)
 			}
@@ -96,13 +114,13 @@ func main() {
 		case <-done:
 			return
 		case <-interrupt:
-			log.Println("interrupt")
+			log.Info("interrupt")
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
 			err := connection.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				log.Println("write close:", err)
+				log.Error("write close:", err)
 				return
 			}
 			select {
