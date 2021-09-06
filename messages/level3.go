@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	flatbuffers "github.com/google/flatbuffers/go"
-	serialization "github.com/krypto-org/krypto-archiver/serialization"
+	"github.com/krypto-org/krypto-archiver/serialization"
 )
 
 // Received Exchange received message:
@@ -77,7 +77,7 @@ type Change struct {
 type Activate struct {
 	Type      string `json:"type"`
 	ProductID string `json:"product_id"`
-	Timestamp string `json:"timestamp"`
+	Timestamp string `json:"Timestamp"`
 	UserID    string `json:"user_id"`
 	ProfileID string `json:"profile_id"`
 	OrderID   string `json:"order_id"`

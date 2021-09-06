@@ -17,7 +17,6 @@ func write(bb []byte, f *os.File) {
 }
 
 func main() {
-	// TODO: Split the data in multiple files
 	// TODO: Configuration for file and input details
 
 	customFormatter := new(log.TextFormatter)
@@ -52,17 +51,20 @@ func main() {
 
 	go func() {
 		defer close(done)
-		file, err := os.Create("/tmp/coinbase_dump.data")
-		messages.Check(err)
+		fileHandler := messages.FileHandler{
+			Frequency: int64(60 * time.Second),
+			Filename:  "coinbase_dump.data",
+			Directory: "/tmp/coinbase",
+		}
 
-		defer func(file *os.File) {
-			err := file.Close()
-			if err != nil {
-				log.Errorf("Error while closing file %s\n", err)
-			}
-		}(file)
+		defer messages.Close(&fileHandler)
 
 		for {
+			err := messages.Update(&fileHandler)
+			if err != nil {
+				log.Error("read: ", err)
+				return
+			}
 			_, message, err := connection.ReadMessage()
 			if err != nil {
 				log.Warning("read: ", err)
@@ -75,23 +77,19 @@ func main() {
 			case "received":
 				var receivedJSON messages.Received
 				messages.Check(json.Unmarshal(message, &receivedJSON))
-				log.Infof("Received: %v\n", receivedJSON)
-				write(messages.ConvertReceived(&receivedJSON), file)
+				write(messages.ConvertReceived(&receivedJSON), fileHandler.File)
 			case "open":
 				var openJSON messages.Open
 				messages.Check(json.Unmarshal(message, &openJSON))
-				log.Infof("Open: %v\n", openJSON)
-				write(messages.ConvertOpen(&openJSON), file)
+				write(messages.ConvertOpen(&openJSON), fileHandler.File)
 			case "done":
 				var doneJSON messages.Done
 				messages.Check(json.Unmarshal(message, &doneJSON))
-				log.Infof("Done: %v\n", doneJSON)
-				write(messages.ConvertDone(&doneJSON), file)
+				write(messages.ConvertDone(&doneJSON), fileHandler.File)
 			case "match":
 				var matchJSON messages.Match
 				messages.Check(json.Unmarshal(message, &matchJSON))
-				log.Infof("Match: %v\n", matchJSON)
-				write(messages.ConvertMatch(&matchJSON), file)
+				write(messages.ConvertMatch(&matchJSON), fileHandler.File)
 			case "change":
 				var changeJSON messages.Change
 				messages.Check(json.Unmarshal(message, &changeJSON))

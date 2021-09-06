@@ -14,7 +14,7 @@ type Heartbeat struct {
 	Time        string `json:"time"`
 }
 
-// ParseTimestamp parse utc formatted timestamp to unix nanos
+// ParseTimestamp parse utc formatted Timestamp to unix nanos
 func ParseTimestamp(ts string) (int64, error) {
 	t, e := time.Parse(time.RFC3339, ts)
 	return t.UnixNano(), e
