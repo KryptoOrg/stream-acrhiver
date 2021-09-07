@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"github.com/gorilla/websocket"
+	"github.com/krypto-org/krypto-archiver/config"
+	"github.com/krypto-org/krypto-archiver/messages"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"time"
-
-	"github.com/gorilla/websocket"
-	"github.com/krypto-org/krypto-archiver/messages"
 )
 
 func write(bb []byte, f *os.File) {
@@ -17,21 +18,25 @@ func write(bb []byte, f *os.File) {
 }
 
 func main() {
-	// TODO: Configuration for file and input details
+
+	configFilename := flag.String("config", "config.yaml", "provide config file")
+	cfg, err := config.NewConfig(*configFilename)
+
+	messages.Check(err)
+
+	log.Infof("Loaded config: %v\n", cfg)
 
 	customFormatter := new(log.TextFormatter)
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05.999"
 	customFormatter.FullTimestamp = true
 	log.SetFormatter(customFormatter)
 
-	addr := "wss://ws-feed.pro.coinbase.com"
-
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	log.Infof("connecting to %s", addr)
+	log.Infof("connecting to %s", cfg.Address)
 
-	connection, _, err := websocket.DefaultDialer.Dial(addr, nil)
+	connection, _, err := websocket.DefaultDialer.Dial(cfg.Address, nil)
 	messages.Check(err)
 	defer func(connection *websocket.Conn) {
 		err := connection.Close()
@@ -42,7 +47,7 @@ func main() {
 
 	done := make(chan struct{})
 
-	subs := messages.SubscriptionMessage{Type: "subscribe", ProductIds: []string{"BTC-USD"}, Channels: []string{"full", "heartbeat"}}
+	subs := messages.SubscriptionMessage{Type: "subscribe", ProductIds: cfg.Symbols, Channels: []string{"full", "heartbeat"}}
 	subsJSON, err := json.Marshal(&subs)
 	messages.Check(err)
 
@@ -52,9 +57,9 @@ func main() {
 	go func() {
 		defer close(done)
 		fileHandler := messages.FileHandler{
-			Frequency: int64(60 * time.Second),
-			Filename:  "coinbase_dump.data",
-			Directory: "/tmp/coinbase",
+			Frequency: cfg.Frequency * int64(time.Second),
+			Filename:  cfg.Filename,
+			Directory: cfg.Directory,
 		}
 
 		defer messages.Close(&fileHandler)
@@ -70,6 +75,7 @@ func main() {
 				log.Warning("read: ", err)
 				return
 			}
+
 			var messageJSON map[string]interface{}
 			messages.Check(json.Unmarshal(message, &messageJSON))
 			messageType := messageJSON["type"]

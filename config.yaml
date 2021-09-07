@@ -1,0 +1,7 @@
+address: wss://ws-feed.pro.coinbase.com
+filename: coinbase_dump.data
+directory: /tmp/coinbase
+frequency_seconds: 60
+symbols:
+  - BTC-USD
+  - ETH-USD
