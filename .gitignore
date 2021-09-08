@@ -18,6 +18,7 @@
 .vscode
 go.sum
 
-krypto-archiver
+krypto-incremental
+krypto-snapshots
 
 .idea

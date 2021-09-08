@@ -15,3 +15,14 @@ type L2Update struct {
 	Time      string     `json:"time"`
 	Changes   [][]string `json:"changes"`
 }
+
+type PriceLevel struct {
+	Price    float64
+	Quantity float64
+}
+
+type Level2Snapshot struct {
+	Sequence int64
+	Bids     []PriceLevel
+	Asks     []PriceLevel
+}
