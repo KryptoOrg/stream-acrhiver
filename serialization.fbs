@@ -60,3 +60,15 @@ table Heartbeat {
   sequence: long;
   last_trade_id: long;
 }
+
+struct PriceLevel {
+  price: float64;
+  quantity: float64;
+}
+
+table MarketByLevelSnapshot {
+  sequence: long;
+  symbol: string;
+  bids: [PriceLevel];
+  asks: [PriceLevel];
+}

@@ -28,6 +28,7 @@ rm -r build
 
 echo -e "${BLUE}"--- BUILDING EXECUTABLE ---"${NC}"
 
-go build .
+go build ./cmd/krypto-incremental
+go build ./cmd/krypto-snapshots
 
 echo -e "${BLUE}"--- DONE! ---"${NC}"

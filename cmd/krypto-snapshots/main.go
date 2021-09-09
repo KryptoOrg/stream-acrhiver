@@ -6,7 +6,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 )
 
 func main() {
@@ -17,29 +16,6 @@ func main() {
 
 	var messageJSON map[string]interface{}
 	messages.Check(json.Unmarshal(responseData, &messageJSON))
-	sequence := int64(messageJSON["sequence"].(float64))
-
-	snapshot := messages.Level2Snapshot{
-		Sequence: sequence,
-	}
-
-	for _, bid := range messageJSON["bids"].([]interface{}) {
-		split := bid.([]interface{})
-		price, err := strconv.ParseFloat(split[0].(string), 10)
-		messages.Check(err)
-		quantity, err := strconv.ParseFloat(split[1].(string), 10)
-		messages.Check(err)
-		snapshot.Bids = append(snapshot.Bids, messages.PriceLevel{Price: price, Quantity: quantity})
-	}
-
-	for _, ask := range messageJSON["asks"].([]interface{}) {
-		split := ask.([]interface{})
-		price, err := strconv.ParseFloat(split[0].(string), 10)
-		messages.Check(err)
-		quantity, err := strconv.ParseFloat(split[1].(string), 10)
-		messages.Check(err)
-		snapshot.Asks = append(snapshot.Asks, messages.PriceLevel{Price: price, Quantity: quantity})
-	}
-
-	log.Info(snapshot)
+	bytes := messages.CreateL2Snapshot("BTC-USD", messageJSON)
+	log.Info(bytes)
 }
