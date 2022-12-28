@@ -18,6 +18,10 @@ type FileHandler struct {
 
 func GenerateNewFileName(handler *FileHandler) string {
 	date := time.Unix(0, handler.Timestamp).Format("20060102")
+	if _, err := os.Stat(handler.Directory); os.IsNotExist(err) {
+		err := os.Mkdir(handler.Directory, os.ModePerm)
+		Check(err)
+	}
 	datedDirectory := filepath.Join(handler.Directory, date)
 	if _, err := os.Stat(datedDirectory); os.IsNotExist(err) {
 		err := os.Mkdir(datedDirectory, os.ModePerm)
